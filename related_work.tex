@@ -1,0 +1,116 @@
+%%
+%% This is file `sample-authordraft.tex',
+%% generated with the docstrip utility.
+%%
+%% The original source files were:
+%%
+%% samples.dtx  (with options: `authordraft')
+%% 
+%% IMPORTANT NOTICE:
+%% 
+%% For the copyright see the source file.
+%% 
+%% Any modified versions of this file must be renamed
+%% with new filenames distinct from sample-authordraft.tex.
+%% 
+%% For distribution of the original source see the terms
+%% for copying and modification in the file samples.dtx.
+%% 
+%% This generated file may be distributed as long as the
+%% original source files, as listed above, are part of the
+%% same distribution. (The sources need not necessarily be
+%% in the same archive or directory.)
+%%
+%% The first command in your LaTeX source must be the \documentclass command.
+\documentclass[sigconf,authordraft]{acmart}
+
+%%
+%% \BibTeX command to typeset BibTeX logo in the docs
+\AtBeginDocument{%
+  \providecommand\BibTeX{{%
+    \normalfont B\kern-0.5em{\scshape i\kern-0.25em b}\kern-0.8em\TeX}}}
+
+%% Rights management information.  This information is sent to you
+%% when you complete the rights form.  These commands have SAMPLE
+%% values in them; it is your responsibility as an author to replace
+%% the commands and values with those provided to you when you
+%% complete the rights form.
+%\setcopyright{acmcopyright}
+%\copyrightyear{2018}
+%\acmYear{2018}
+%\acmDOI{10.1145/1122445.1122456}
+
+%% These commands are for a PROCEEDINGS abstract or paper.
+%\acmConference[Woodstock '18]{Woodstock '18: ACM Symposium on Neural
+%  Gaze Detection}{June 03--05, 2018}{Woodstock, NY}
+%\acmBooktitle{Woodstock '18: ACM Symposium on Neural Gaze Detection,
+%  June 03--05, 2018, Woodstock, NY}
+%\acmPrice{15.00}
+%\acmISBN{978-1-4503-XXXX-X/18/06}
+
+
+%%
+%% Submission ID.
+%% Use this when submitting an article to a sponsored event. You'll
+%% receive a unique submission ID from the organizers
+%% of the event, and this ID should be used as the parameter to this command.
+%%\acmSubmissionID{123-A56-BU3}
+
+%%
+%% The majority of ACM publications use numbered citations and
+%% references.  The command \citestyle{authoryear} switches to the
+%% "author year" style.
+%%
+%% If you are preparing content for an event
+%% sponsored by ACM SIGGRAPH, you must use the "author year" style of
+%% citations and references.
+%% Uncommenting
+%% the next command will enable that style.
+%%\citestyle{acmauthoryear}
+
+%%
+%% end of the preamble, start of the body of the document source.
+\begin{document}
+
+%%
+%% The "title" command has an optional parameter,
+%% allowing the author to define a "short title" to be used in page headers.
+\title{Utilizing Transformer-based Passage Embeddings for Sub-topic Clustering of Passages}
+
+%%
+%% The "author" command and its associated commands are used to define
+%% the authors and their affiliations.
+%% Of note is the shared affiliation of the first two authors, and the
+%% "authornote" and "authornotemark" commands
+%% used to denote shared contribution to the research.
+
+\author{Anonymous author}
+
+%%
+%% By default, the full list of authors will be used in the page
+%% headers. Often, this list is too long, and will overlap
+%% other information printed in the page headers. This command allows
+%% the author to define a more concise list
+%% of authors' names for this purpose.
+\renewcommand{\shortauthors}{}
+\maketitle
+
+\section{Related Work}
+\subsection{Background on sentence BERT embeddings}
+It is observed in deep learning and transfer learning research that layers at different levels of a deep network capture specific information about the data \cite{peters2018dissecting}. In their work, Peters et al. \cite{peters2018deep} learned a function that projects internal state of a deep Bidirectional Language Model which was trained on large dataset to a contextual embedding space. They released this embedding vectors called ELMo which proved to be useful across many NLP problems. Being a deep network, BERT \cite{devlin2018bert} also has several layers of attention heads and feed-forward neural networks stacked on top of each other. Researchers have tried to utilize information captured at these layers by averaging all BERT layers \cite{zhang2019bertscore} or extracting the output of a special token (CLS) in the input \cite{may2019measuring}\cite{qiao2019understanding} to obtain a fixed size embedding representing the input sequence. Unfortunately empirical studies prove that these methods perform poorly in semantic matching tasks. This motivated Reimers et al. \cite{reimers2019sentence} to come up with some modifications in retrieving strategies of these embeddings as well as specific fine-tuning techniques that provide better sentence embeddings in terms of its performance in numerous sentence similarity tasks. The key differences between their approach and simpler approaches attempted before them are the following:
+
+1. Averaging hidden layers tend to lose vital semantic information captured in separate layers of BERT. Instead Reimers et al. experimented with three pooling strtegies: CLS, max pooling and mean pooling. 
+
+2. Also they used two different network structures to fine-tune these embeddings: Siamese networks for pairwise training data (binary similarity regression and multiclass classification) and triplet network for sentence triples (one anchor, similar and not similar).
+
+3. They evaluated three different loss functions which will tune the embeddings for semantic similarity tasks. a) regression loss minimizes mse between the similarity labels and cosine similarity between sample embeddings, b) classification loss optimizes cross-entropy loss between weighted class probabilities from a concatenation of embeddings of sentence pair, c) triplet loss trains the network such that distance between anchor sent and positive sent is higher than that of negative sent.
+
+Although the authors claim that they have devised these methods to help clustering and semantic search tasks, they only apply these methods to embed sentences. Due to that they could only evaluate their methods on sentence level tasks. As described before, this hardly helps IR research fields which typically deals with longer text units than a sentence. It is hence unclear whether these embedding strategies are applicable to passage or document level and if yes then what are the necessary modifications we need.
+
+\subsection{Other related works} Previous research work in text clustering\cite{kulis2009semi,bilenko2004integrating,davidson2008finding,basu2004probabilistic,basu2002semi,gomaa2013survey} focused on unsupervised lexical similarity metrics as the distance function used by hierarchical agglomerative clustering algorithms. Metzler et al.\cite{metzler2007similarity} explore some hybrid similarity measures which combine lexical and probabilistic measures with application to query similarity detection. Banea et al.\cite{banea2012unt} develop a synergistic combination of text similarity measures. For semi-supervised clustering, researchers have found pairwise binary constraints also known as \textit{``must link"} and \textit{``can not link"} to be particularly effective. Most lexical similarity metrics work with a term-based vector representation of text such as TFIDF. However, Steyvers et al.\cite{steyvers2007probabilistic} propose to measure document similarity by first inferring the topic distributions of documents by LDA\cite{blei2003latent} topic modeling and then calculating the Kullback-Leibler (KL) divergence between them. Bernardini et al. \cite{bernardini2009full} cluster search results for a broad topic into subtopics using keyphrases. Carpineto et al. \cite{carpineto2012evaluating} evaluate the effectiveness of sub-topic clustering and diversification in post-processing search results.
+
+Representing text plays an important role in effective clustering. Li et al. \cite{li2016generative} combine topic modeling and word embedding techniques to represent documents that capture topical information. They claim that it can learn topical representation vectors using significantly less data than traditional topic models. As they evaluate their model on retrieval tasks with highly distinct topical centroids (20newsgroup, reuters), it is unclear how accurate their model will be in capturing fine-grained topics which many traditional IR algorithms find difficult. When Mikolov et al. \cite{mikolov2013distributed} introduced their word2vec model and Pennignton et al. \cite{pennington2014glove} released their implementation of global word embeddings (glove), researchers have tried to use average word vectors to represent longer sequences of texts such as a sentence. However the results tend to decrease drastically for passages and even short documents due to increased noise while averaging. There are works which try to embed longer text units than words in semantic-rich fashion. Most notable work on this direction must be the paragraph embeddings by Le et al. \cite{le2014distributed}. They propose the idea of representing variable length texts with a fixed size vector which can capture semantic distance between texts much like word vectors. Dai et al. \cite{dai2015document} not only broaden the scope of paragraph vectors but also propose modifications that improve embedding quality. Skip-thought algorithm proposed by Kiros et al. \cite{kiros2015skip} extended the skip-gram model described in the word2vec paper in sentence level to obtain sentence vectors. Hill et al. \cite{hill2016learning} propose fastSent and Sequential Denoising Autoencoder which are similar to skip-thought but much more computationally efficient. They conclude that optimal sentence representation model depends largely on the nature of the downstream tasks: supervised, un-supervised or unknow application domain. However they focus only on sentence level tasks and it is unclear how these models will perform in paragraph level.
+\bibliographystyle{plain}
+\bibliography{myref}
+\end{document}
+\endinput
