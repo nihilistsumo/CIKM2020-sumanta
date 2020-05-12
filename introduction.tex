@@ -1,102 +1,5 @@
-%%
-%% This is file `sample-authordraft.tex',
-%% generated with the docstrip utility.
-%%
-%% The original source files were:
-%%
-%% samples.dtx  (with options: `authordraft')
-%% 
-%% IMPORTANT NOTICE:
-%% 
-%% For the copyright see the source file.
-%% 
-%% Any modified versions of this file must be renamed
-%% with new filenames distinct from sample-authordraft.tex.
-%% 
-%% For distribution of the original source see the terms
-%% for copying and modification in the file samples.dtx.
-%% 
-%% This generated file may be distributed as long as the
-%% original source files, as listed above, are part of the
-%% same distribution. (The sources need not necessarily be
-%% in the same archive or directory.)
-%%
-%% The first command in your LaTeX source must be the \documentclass command.
-\documentclass[sigconf,authordraft]{acmart}
-
-%%
-%% \BibTeX command to typeset BibTeX logo in the docs
-\AtBeginDocument{%
-  \providecommand\BibTeX{{%
-    \normalfont B\kern-0.5em{\scshape i\kern-0.25em b}\kern-0.8em\TeX}}}
-
-%% Rights management information.  This information is sent to you
-%% when you complete the rights form.  These commands have SAMPLE
-%% values in them; it is your responsibility as an author to replace
-%% the commands and values with those provided to you when you
-%% complete the rights form.
-%\setcopyright{acmcopyright}
-%\copyrightyear{2018}
-%\acmYear{2018}
-%\acmDOI{10.1145/1122445.1122456}
-
-%% These commands are for a PROCEEDINGS abstract or paper.
-%\acmConference[Woodstock '18]{Woodstock '18: ACM Symposium on Neural
-%  Gaze Detection}{June 03--05, 2018}{Woodstock, NY}
-%\acmBooktitle{Woodstock '18: ACM Symposium on Neural Gaze Detection,
-%  June 03--05, 2018, Woodstock, NY}
-%\acmPrice{15.00}
-%\acmISBN{978-1-4503-XXXX-X/18/06}
-
-
-%%
-%% Submission ID.
-%% Use this when submitting an article to a sponsored event. You'll
-%% receive a unique submission ID from the organizers
-%% of the event, and this ID should be used as the parameter to this command.
-%%\acmSubmissionID{123-A56-BU3}
-
-%%
-%% The majority of ACM publications use numbered citations and
-%% references.  The command \citestyle{authoryear} switches to the
-%% "author year" style.
-%%
-%% If you are preparing content for an event
-%% sponsored by ACM SIGGRAPH, you must use the "author year" style of
-%% citations and references.
-%% Uncommenting
-%% the next command will enable that style.
-%%\citestyle{acmauthoryear}
-
-%%
-%% end of the preamble, start of the body of the document source.
-\begin{document}
-
-%%
-%% The "title" command has an optional parameter,
-%% allowing the author to define a "short title" to be used in page headers.
-\title{Utilizing Transformer-based Passage Embeddings for Sub-topic Clustering of Passages}
-
-%%
-%% The "author" command and its associated commands are used to define
-%% the authors and their affiliations.
-%% Of note is the shared affiliation of the first two authors, and the
-%% "authornote" and "authornotemark" commands
-%% used to denote shared contribution to the research.
-
-\author{Anonymous author}
-
-%%
-%% By default, the full list of authors will be used in the page
-%% headers. Often, this list is too long, and will overlap
-%% other information printed in the page headers. This command allows
-%% the author to define a more concise list
-%% of authors' names for this purpose.
-\renewcommand{\shortauthors}{}
-\maketitle
-\section{Introduction}
 In the early stages of the information seeking process, users are often not ready to formulate a specific search query or question; Taylor\cite{taylor2015question} refers this stage as conscious information need. In today's web search infrastructure, users with conscious needs turn towards Wikipedia, which offers articles, where multiple relevant aspects are provided in the form of sections. However many such information needs can not be satisfied with a single article and takes much effort from the user to browse through multiple articles and ranked lists of hyperlinks from search engines. While our long-term vision is to develop systems that respond to vague information needs with a Wikipedia-like article, in this work we focus on a small part of this vision: Assuming that we would be able to retrieve relevant passages for a topic, can we train an algorithm to cluster the passages into subtopics under the broad topic? \par
-Researchers have explored subtopic clustering mostly in the premise of post-processing of search results in form of rankings of hyperlinks \cite{bernardini2009full, carpineto2012evaluating}. However, from their findings it is unclear how subtopic clustering can be applied to arrange passage-length texts with an ultimate goal of article construction. Also lack of suitable datasets involving passages relevant for different sub-topics makes it difficult to develop supervised models, specially neural models, for this problem. The TREC Complex Answer Retrieval (CAR)\cite{dietz2017trec} track offers a task, where for a given title and section heading, a ranking of paragraphs is to be retrieved. But in this work, we do not assume that a suitable outline is provided to us for a topic. Instead we focus on the clustering task and explore an ideal scenario where we already have the relevant passages for an Wikipedia article. Now to achieve our goal of grouping these relevant passages into subtopics, we need to develop a model that can estimate fine-grained topical differences.
+Researchers have explored subtopic clustering mostly in the premise of post-processing of search results in form of rankings of hyperlinks \cite{bernardini2009full, carpineto2012evaluating}. However, from their findings it is unclear how subtopic clustering can be applied to arrange passage-length texts with an ultimate goal of article construction. Also lack of suitable datasets involving passages relevant for different sub-topics makes it difficult to develop supervised models, specially neural models, for this problem. The TREC Complex Answer Retrieval (CAR) \cite{dietz2017trec} track offers a task, where for a given title and section heading, a ranking of paragraphs is to be retrieved. But in this work, we do not assume that a suitable outline is provided to us for a topic. Instead we focus on the clustering task and explore an ideal scenario where we already have the relevant passages for an Wikipedia article. Now to achieve our goal of grouping these relevant passages into subtopics, we need to develop a model that can estimate fine-grained topical differences.
 
 This problem is particularly difficult for traditional text similarity metrics used in IR retrieval methods (BM25, tfidf, SDM) which rely on exact term matching. For example, consider the following pair of text snippets relevant for the query "Amur leopard".
 
@@ -126,24 +29,19 @@ Although there is hardly any term overlap between the text snippets, it is evide
 %}
 
 %This problem is particularly difficult for traditional IR retrieval methods (BM25, SDM) because it requires fine-grained topical knowledge in order to decide in which sub-topic of the article "Amur Leopard" this passage should belong to. Unsupervised similarity metrics such as TFIDF, BM25 are not sensitive enough to figure out that the sentence talks about habitat and behavior of the animal due to lack of exact term matching. 
-Semantic net based term similarity metrics (Babelnet) or supervised word embeddings (Glove) may be used to find strong relationships between the word "thick fur" in the first passage and "tanned skin" in the second and also their semantic relatedness to the "characteristics" of an animal. But meaning of a word is context dependent and if we do not take the current context into consideration, it may lead to wrong assumption about the topic. Also access to correct contextual meaning of words does not guarantee us that we have the correct meaning of the sentence as well, because different permutation of those meanings in the sentence lead to different topical sense. Hence along with the contextual meaning of words in a sentence we also have to make sense of the particular sequence in which they are currently arranged. Moreover, a passage-sized text consists of multiple sentences, each of which may present different aspects of the same sub-topic. Together, a comprehensive meaning emerges which represents the sub-topic discussed in the passage. That is to successfully solve a difficult IR problem such as the one discussed above, a model must i) understand the semantic, contextual meaning of individual constituent units of a passage (words, sentences), ii) learn to represent the full passage in such a way that combines all semantic and sequential information provided by it's constituent components.
+Semantic Web-based term similarity metrics (Babelnet) or supervised word embeddings (GloVe \ld{citation}) may be used to find strong relationships between the word "thick fur" in the first passage and "tanned skin" in the second and also their semantic relatedness to the "characteristics" of an animal. But meaning of a word is context dependent and if we do not take the current context into consideration, it may lead to wrong assumptions about the topic. Also access to correct contextual meaning of words does not guarantee us that we have the correct meaning of the sentence as well, because different permutation of those meanings in the sentence lead to different topical sense. Hence along with the contextual meaning of words in a sentence we also have to make sense of the particular sequence in which they are currently arranged. Moreover, a passage-sized text consists of multiple sentences, each of which may present different aspects of the same sub-topic. Together, a comprehensive meaning emerges which represents the sub-topic discussed in the passage. That is to successfully solve a difficult IR problem such as the one discussed above, a model must i) understand the semantic, contextual meaning of individual constituent units of a passage (words, sentences), ii) learn to represent the full passage in such a way that combines all semantic and sequential information provided by its constituent components.
 
-Sequence to sequence models attempt to leverage the sequence in a natural language sentence and draws it's supervision signals from that. To learn such sequence dependencies it may use different techniques such as LSTM, GRU, Attention but ultimately they preserve the sequence information. Transformer model which uses a special type of attention mechanism called self-attention performs exceptionally well on machine translation benchmarks. Google's BERT model which uses bidirectional transformer, are well suited for NLP tasks. Researchers have applied it successfully to various NLP applications such as sentence similarity, named entity recognition, question answering etc which used to be considered difficult for predecessors of BERT. However, there are engineering limitations for which BERT or similar models can not be used to model long sequences such as longer passages and documents. In our example case, maybe feeding the first few sentences through BERT is enough to model the topic of the passages. But in case of longer passages and full length documents, losing information later in the sequence will significantly hurt the performance. There are workarounds which allow longer sequences to fit into these models but they all involve complicated architectural hack inside an already complex model. This means increase in training time, cost and further decrease in model explainability. Also engineers will be reluctant to welcome any major architectural changes to the core components of a downstream task pipeline that has incorporated BERT based model and had already fine-tuned its hyper-parameters. All these reason severely limits the applicability of transformer based models into difficult IR tasks.
+Sequence to sequence models attempt to leverage the sequence in a natural language sentence and draws its supervision signals from that. To learn such sequence dependencies it may use different techniques such as LSTM, GRU, or Attention \ld{add citations} but ultimately they preserve the sequence information. Transformer models which use a special type of attention mechanism called self-attention performs exceptionally well on machine translation benchmarks \ld{citation needed}. Google's BERT model which uses a bidirectional transformer, are well suited for NLP tasks \ld{citation needed}. It has been applied successfully to various NLP applications such as sentence similarity, named entity recognition, question answering etc which used to be considered difficult for predecessors of BERT \ld{citations needed}. However, there are engineering limitations for which BERT or similar models can not be used to model long sequences such as longer passages and documents. In our example case, maybe feeding \ld{slang, please rephrase} the first few sentences through BERT is enough to model the topic of the passages. But in the case of longer passages and full length documents, losing information later in the sequence will significantly hurt the performance. There are heuristics which allow longer sequences to fit into these models but they all involve complicated architectural hacks \ld{slang, please rephrase} inside an already complex model. These result in an increase in training time, cost and further decrease in model explainability \ld{citation needed}. \ld{I would drop this next sentence, it is not clear what it provides and people may feel offended:} Also engineers will be reluctant to welcome any major architectural changes to the core components of a downstream task pipeline that has incorporated BERT based model and had already fine-tuned its hyper-parameters. All these reasons severely limit the applicability of transformer-based models into difficult IR tasks.\ld{This is all nice text, but I don't really undertand how your argument follows that this will not be good for IR -- after all, it is good for NLP! Also keep in mind that whatever you say here will be used to measure your own work. So the strategy is to be humble and factual.}
 
-So we identify two major complementary avenue of research: Transformer models which have been exceptional in solving numerous NLP problems and difficult IR problems such as subtopic clustering which can surely benefit from a well-suited language understanding model such as BERT. We bridge this gap by utilizing Transformer based embedding models with certain simple yet powerful modifications that allow us to embed passage-sized texts. Thorough evaluation of our passage embedding methods show that BERT-like complex models can be adapted to difficult IR tasks such as subtopic clustering without major architectural changes. Our contributions through this work are as follows:
+So we identify two major complementary avenues of research: \ld{it was unclear what option 1 and 2 are, I placed numbers, hoping it would help, but I am not sure I placed them right} (1) Transformer models which have been successful in solving numerous NLP problems and (2) difficult IR problems such as subtopic clustering which can surely benefit from a well-suited language understanding model such as BERT \ld{I don't get how "difficult IR problems" is an avenue for research}. We bridge this gap \ld{which gap is that?} by utilizing Transformer-based embedding models with novel \ld{I dropped "simple yet powerful"} modifications that allow us to embed passage-sized texts. A thorough evaluation of our passage embedding methods show that BERT-like complex models can be adapted to \ld{Drop: "difficult IR tasks such as"} subtopic clustering without major architectural changes. The contributions in this work are as follows:
 
 \begin{itemize}
-    \item Explore simple modifications to BERT based sentence embedding methods that can be trained and used to embed passage-sized texts.
-    \item We propose CATS: Context Aware Triamese Similarity network, a supervised similarity metric which calculates similarity score between a pair of passage embeddings while taking the context in consideration.
+    \item Explore simple modifications to BERT-based sentence embedding methods that can be trained and used to embed passage-sized texts.
+    \item We propose CATS: Context Aware Triamese Similarity network, a supervised similarity metric which calculates the similarity score between a pair of passage embeddings while taking the context in consideration.
     \item Using the proposed modifications, we present a solution to the subtopic clustering problem.
 \end{itemize}
 
-This paper is organized in following sections: Section 2 describes related works in this area along with some background on sentence BERT embeddings. Section 3 describes our approach in detail. Section 4 describes our experimental settings and discuss the findings from our empirical study. Finally, in Section 5 we conclude our work.
+This paper is organized in following sections: Section 2 \ld{use labels and refs} describes related work in this area along with some background on sentence BERT embeddings. Section 3\ld{use labels and refs} describes our approach in detail. Section 4\ld{use labels and refs} describes our experimental settings and discuss the findings from our empirical study. Finally, in Section 5\ld{use labels and refs} we conclude our work.
 
 %(Word is atomic unit for sentence but when I'm trying to work with passages, sentence should be atomic unit. <- this can be justification for MaLSTM sentence embedding
 %Also the whole passage text can be treated as a long sequence and initial 512 tokens may be enough to decide the sub-topic of the passage. Hence if the whole passage is not very much beyond the max sequence then we should choose this approach. However, if it is not the case then the previous approach should be used. We can use the two experiments with by1test and 4sub to show that sentwise embeddings are more effective than whole passage embedding for longer passage sequence.)
-
-\bibliographystyle{plain}
-\bibliography{myref}
-\end{document}
-\endinput
