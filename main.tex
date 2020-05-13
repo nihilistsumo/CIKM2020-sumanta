@@ -25,6 +25,8 @@
 \documentclass[sigconf,authordraft]{acmart}
 \newcommand{\ld}[1]{\textcolor{purple}{Laura: #1}}
 
+\usepackage{xr}
+
 %%
 %% \BibTeX command to typeset BibTeX logo in the docs
 \AtBeginDocument{%
@@ -117,19 +119,19 @@ While within the TREC Complex Answer Retrieval track, effective retrieval method
 %% information and builds the first part of the formatted document.
 \maketitle
 
-\section{Introduction}
+\section{Introduction}\label{sec:intro}
 \input{introduction}
 
-\section{Related Work}
+\section{Related Work}\label{sec:rel}
 \input{related_work}
 
-\section{Approach}
+\section{Approach}\label{sec:app}
 \input{approach}
 
-\section{Evaluation} 
+\section{Evaluation}\label{sec:eval}
 \input{evaluation}
 
-\section{Conclusion}
+\section{Conclusion}\label{sec:con}
 \input{conclusion}
 
 \bibliographystyle{plain}
