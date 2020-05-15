@@ -1,5 +1,5 @@
 \subsection{Experimental settings} The central theme of our work is to explore an efficient way to make use of embeddings and Transformer models to represent passage-length texts. We evaluate in an open-domain IR context, to which extent our approach for sub-topic clustering of passages can capture the fine-grained nuances in sub-topics among passages retrieved for an overarching topic. However as mentioned before, we train our models to learn pairwise distances between passages first, and then use the pairwise distances for clustering. We describe our clustering pipeline in the following:
-\begin{itemize}
+\begin{itemize}[leftmargin=.15in]
     \item \textbf{Step 1: Binary classification into same/different sections} First, we train our supervised models to solve a query-specific binary classification problem. Given a pair of passages $p_1, p_2$ from an Wikipedia article, the model has to decide whether they should share the same section in that article or not.
     \item \textbf{Step 2: Extract pairwise similarity score between passage pairs} From the model trained in previous step or other unsupervised models, we extract pairwise similarity scores between all passage pairs which we want to cluster. If a passage embedding model is being trained in Step 1, then a distance function (cosine distance or CATS) is used to generate passage similarity scores between pairs of passage embedding vectors. For CATS, it is trained again for binary classification task using a different split of the training dataset used to train its underlying embedding model before using it to generate the similarity scores.
     \item \textbf{Step 3: Subtopic clustering} Given a set of passages $P$ about a topic $T$, we have to generate $k$ clusters $c_1 .. c_k$ of passages, in such a way that each cluster $c_i$ coincides with a specific sub-topic of $T$. Using the pre-computed pairwise similarity scores as input, we use Hierarchical Agglomerative clustering with average linkage to obtain clusters of passages from same article.
@@ -13,25 +13,25 @@ The training and evaluation phase of the clustering pipeline is depicted in Figu
   \label{fig:pipe}
 \end{figure}
 
-\subsection{Training and evaluation data} 
+\subsection{Dataset} 
 We use several parts of a publicly available TREC Complex Answer Retrieval dataset \cite{dietz2017trec}\footnote{http://trec-car.cs.unh.edu/datareleases/} for training and evaluating our models: benchmarkY1-train.v2.0 (trec y1 train), benchmarkY1-test (trec y1 test), benchmarkY2test-auto-manual-qrels (trec y2 test), and train.v2.0 (trec train). The dataset consists of a large corpus of text passages extracted from Wikipedia and text book articles. One of the target task described by the organizers of the CAR challenge  is a passage retrieval task where we have to retrieve relevant passages from the corpus for complex queries. The query set is derived from concatenating section headings of an article with its article title. The automatic benchmark will, for such queries, only consider passages as relevant if they originate from the corresponding section of the article. This relevance information is used to obtain the hierarchical structure of each article in the dataset; these are used as input to our training data generation method depicted in Figure \ref{fig:conv}. The resulting dataset consists of passage-pairs, each with the title of the source article and a binary label that denotes whether the passage-pair is from the same section of the article.
 
 %Each part has ground truth information contained in qrels files which inform about relevance of passages to different hierarchical sections of an Wikipedia article. For trec y1 parts, it has two different levels of hierarchical relevance: hierarchical qrels considers each section in Wikipedia articles as different topics and maps relevant passages accordingly. Toplevel qrels does not consider deeper level sections and maps all passages from deeper level sections to the section on the topmost level of the section hierarchy.
 
-\subsubsection{Training data} Using the technique depicted in Figure \ref{fig:conv}, we convert subset of \textbf{trec train} and \textbf{trec y1 train} dataset from TRECCAR to \textbf{Train-binary} and \textbf{by1train-binary} respectively. We also generate two triplet dataset to fine-tune text embedding models similar to the model by Dor et al. . The dataset \textbf{Train-triplet-psg} contains samples of passage triplets as $(p_a, p_s, p_d)$ where $p_a$ and $p_s$ are similar and $p_d$ is dissimilar according to \textbf{Train-binary}. \textbf{Train-triplet-sent} is constructed similar to \texbf{Train-triplet-psg} except we take a random sentence from each passage in a triplet instead of the whole passage text.
+\subsubsection{Training data} Using the technique depicted in Figure \ref{fig:conv}, we convert subset of \textbf{trec train} and \textbf{trec y1 train} dataset from TRECCAR to \textbf{Train-binary} and \textbf{by1train-binary} respectively. We also generate two triplet dataset to fine-tune text embedding models similar to the model by Dor et al. . The dataset \textbf{Train-triplet-psg} contains samples of passage triplets as $(p_a, p_s, p_d)$ where $p_a$ and $p_s$ are similar and $p_d$ is dissimilar according to \textbf{Train-binary}. \textbf{Train-triplet-sent} is constructed similar to \textbf{Train-triplet-psg} except we take a random sentence from each passage in a triplet instead of the whole passage text.
 
 \subsubsection{Evaluation data} We evaluate our models on both the query-specific binary classification task and the clustering task. The former task is evaluated on \textbf{Test1-binary} and \textbf{Test2-binary}, converted from \textbf{trec y1 test} and \textbf{trec y2 test}, similar to \textbf{Train-binary}. For the clustering task, we use the section-passage relevance information provided in the automatic ground truth of TREC CAR dataset to construct the clustering ground truth of true passage clusters in articles. However, based on topical diversity inside a cluster, we construct two different clustering ground truths:
 
-\begin{itemize}
+\begin{itemize}[leftmargin=.15in]
     \item \textit{Lenient (ln)} We consider all passages under the same top-level section to be a single cluster. For example: passages relevant for \textit{Amur Leopard/Threats}, \textit{Amur Leopard/Threats/Forest degradation}, and \textit{Amur Leopard/Threats/Poaching} are considered part of same \textit{"Threat"} cluster.
     \item \textit{Hierarchical (hs)} We consider passages under different hierarchical sections to be separate clusters. In previous example, we would form three distinct clusters (\textit{"Threats", "Forest degradation",} and \textit{"Poaching"}) for the \textit{"Amur Leopard"} article.
 \end{itemize}
 
 \subsection{Experimental models} We experiment with the following models:
-\begin{itemize}
+\begin{itemize}[leftmargin=.15in]
     \item \textbf{BERT models} BERT-base cased (bertc) and BERT-base uncased (bertu) pretrained models finetuned using \textbf{Train-binary}.
     \item \textbf{Passage embedding models} Four variations of Sentence-BERT models are used to generate passage embeddings: 
-    \begin{itemize}
+    \begin{itemize}[leftmargin=.2in]
         \item \textit{en:} BERT-base model with mean-tokens pooling trained on SNLI and MultiNLI dataset.
         \item \textit{ens:} Same as \textit{en} but first fine-tuned on the AllNLI datasent, then on train set of STS benchmark.
         \item \textit{ews:} Version of Dor et al. text embeddings which are fine-tuned on triplets generated from Wikipedia sections. However to prevent training data leakage, we fine-tuned the model using \textbf{Train-triplet-sent}, instead of the training dataset provided by the authors.
@@ -61,8 +61,9 @@ Train-triplet-sent & trec train & ews \\
 %\vspace{-3ex}
 \end{table}
 
-\subsection{Subtopic clustering} For each article in \textbf{trec y1 test} and \textbf{trec y2 test}, we cluster all passages from the article using our clustering pipeline discussed before. The clustering results are evaluated using mean Adjusted RAND index \cite{hubert1985comparing}, which measures the agreement between the resulting cluster with the true cluster from ground truth, across all the articles in each dataset. For evaluation purposes we pretend to know the right number of sections of an article, referred here as $k$. In real-world applications, we find that most articles have a typical number of sections, which we would use to determine $k$. Alternatively, work on Dirichlet processes are an avenue of learning and predicting the right number of subtopics along with the data \cite{griffiths2004hierarchical, blei2011distance}. Based on $k$, we evaluate two scenarios: the true number of clusters for each article is i) provided ($k=$true) ii) not provided, so a fixed cluster number is predetermined (e.g. $k=$6). For each case, we evaluate the clusters against both the \textit{lenient} and \textit{hierarchical} clustering ground truth for Y1 test. For Y2 test, we only evaluate on \textit{lenient} ground truth. The supervised methods were actually trained on binary classification task, so we also report the binary classification evaluation scores in terms of AUC score (Area under the receiver operating characteristics curve). Please refer to Table \ref{tab:by1} for the evaluation results.
+\subsection{Results and Discussion} For each article in \textbf{trec y1 test} and \textbf{trec y2 test}, we cluster all passages from the article using our clustering pipeline discussed before. The clustering results are evaluated using mean Adjusted RAND index \cite{hubert1985comparing}, which measures the agreement between the resulting cluster with the true cluster from ground truth, across all the articles in each dataset. For evaluation purposes we pretend to know the right number of sections of an article, referred here as $k$. In real-world applications, we find that most articles have a typical number of sections, which we would use to determine $k$. Alternatively, work on Dirichlet processes are an avenue of learning and predicting the right number of subtopics along with the data \cite{griffiths2004hierarchical, blei2011distance}. Based on $k$, we evaluate two scenarios: the true number of clusters for each article is i) provided ($k=$true) ii) not provided, so a fixed cluster number is predetermined (e.g. $k=$6). For each case, we evaluate the clusters against both the \textit{lenient} and \textit{hierarchical} clustering ground truth for \textbf{trec y1 test}. For \textbf{trec y2 test}, \textbf{hierarchical} ground truth contains only a few passages in each cluster, so we only evaluate on \textit{lenient} ground truth. The supervised methods were actually trained on binary classification task, so we also report the binary classification evaluation scores in terms of AUC score (Area under the receiver operating characteristics curve). Please refer to Table \ref{tab:by1} for the evaluation results.
 
+\begin{small}
 \begin{table*}[t]
 \centering
 %\ra{1.3}
@@ -102,17 +103,19 @@ hs: evaluated against hierarchical clustering ground truth, ln: lenient clusteri
 k: number of clusters, k=true: original number of clusters in each article}
 %\vspace{-3ex}
 \end{table*}
+\end{small}
 
 \subsubsection{Observation} From Table \ref{tab:by1}, we make the following interesting observations:
-\begin{itemize}
+\begin{itemize}[leftmargin=.15in]
     \item We can see that in six out of eight cases, ewp-psg-CATS is the best performing method. All of these cases except one are statistically significant when compared to the uncased BERT method (bertu), a strong baseline, according to paired ttest.
-    \item All four passage embedding methods benefit from using CATS as the distance function over cosine similarity. For example: ewp-psg-CATS improves about $15$\% over ewp-psg-CATS in terms of mean ARI score when evaluated against hierarchical ground truth of Y1 test with true number of clusters provided (column h ARI(k=true)). This improvement is not only observed for all embedding methods but across all evaluation settings as well.
+    \item All $8$ passage embedding methods benefit from using CATS as the distance function over cosine similarity. For example: ewp-psg-CATS improves about $15$\% over ewp-psg-CATS in terms of mean ARI score when evaluated against hierarchical ground truth of \textbf{trec y1 test} with true number of clusters provided (column hs ARI(k=true)). This improvement is not only observed for all embedding methods but across all evaluation settings as well.
     \item The CATS variant of $en, ens$ improves remarkably over their cosine similarity versions. In some cases the improvement is over $100$\%. For example: en-psg-CATS improves about $115$\% over en-psg-cos in terms of mean ARI when evaluated against lenient clustering ground truth of Y1 test with fixed number of clusters (column ln ARI(k=6)).
-    \item Using the average sentence vector (sent) to represent passages is observed to produce worse outcome when compared to whole passage embedding (psg) for $ewp, ews$. For example: ews-sent-cos performs about $7$\% worse than ews-psg-cos in terms of AUC score for Y1 test. However, in most cases we observe slight performance increase for $en, ens$ when average sentence vector is used.
+    \item Using the average sentence vector (sent) to represent passages is observed to produce worse outcome when compared to whole passage embedding (psg) for $ewp, ews$. For example: ews-sent-cos performs about $7$\% worse than ews-psg-cos in terms of AUC score for \textbf{trec y1 test}. However, in most cases we observe slight performance increase for $en, ens$ when average sentence vector is used.
 \end{itemize}
 
-\subsubsection{Significance test} We have seen from Table \ref{tab:by1} that our proposed CATS method improves all four passage embedding methods explored here. Now to investigate whether the improvement is statistically significant, we conduct paired ttest between each CATS version of passage embedding method and its cosine version. We choose $\alpha = 0.05$ for this study. For brevity, we consider three different cases: Y1 test with hierarchical and lenient ground truth, and Y2 test, both with true number of clusters provided. We report the obtained p-value from the experiments in Table \ref{tab:sigt}. The results confirm that all improvements due to CATS are statistically significant for Y1 test dataset. Whereas for Y2 test, improvements for $en, ens$ methods are statistically significant.
+\subsubsection{Significance test} We have seen from Table \ref{tab:by1} that our proposed CATS method improves all $8$ passage embedding methods explored here. Now to investigate whether the improvement is statistically significant, we conduct paired ttest between each CATS version of passage embedding method and its cosine version. We choose $\alpha = 0.05$ for this study. For brevity, we consider three different cases: Y1 test with hierarchical and lenient ground truth, and Y2 test, both with true number of clusters provided. We report the obtained p-value from the experiments in Table \ref{tab:sigt}. The results confirm that all improvements due to CATS are statistically significant for \textbf{trec y1 test} dataset. Whereas for \textbf{trec y2 test}, improvements for $en, ens$ methods are statistically significant.
 
+\begin{small}
 \begin{table}[t]
 \centering
 %\ra{1.3}
@@ -137,11 +140,13 @@ ens-sent-cos & ens-sent-CATS & 0.0001 & <0.0001 & 0.0016 \\
 k: number of clusters, k=true: original number of clusters in each article}
 %\vspace{-3ex}
 \end{table}
+\end{small}
 
 One important aspect to note here is that the adjusted RAND index score has non-linear relationship with correct cluster assignment of data points. To be more precise, moving a single data point from an incorrect cluster to a correct cluster adds to the true positive and true negative components by the cardinality of the two clusters involved.  Also it increases slowly when most of the data points are initially in the wrong clusters. From the clustering point of view, when the initial cluster is having a very low Adjusted RAND index, significant improvement on the quality of clustering may not yield similar improvement in ARI score when compared to an already near-perfect initial cluster. As our best baseline clustering result yields an ARI score of only around 0.2, any minor improvement in ARI score by our proposed method may suggest significant improvement on the quality of resulting clusters whether or not it is shown in the significance tests. Also due to the same reason, when there are very few true number of clusters or very few data points in each cluster in a clustering problem, misplacing a single data point into a wrong cluster will significantly degrade the clustering performance. Hence the margin of error in this scenario is too low to achieve a high ARI score even for a decent clustering method. The datasets used here has only 7 sections on average for each article and each section has around 3 to 7 passages on average. This explains the low ARI scores achieved across all the methods for this dataset.
 
 \subsubsection{Ablation study} As discussed in Section \ref{sec:cats} and Figure \ref{fig:triam}, final similarity score is learnt from the resulting vector after concatenating transformed query vector, both passage vectors and their difference vectors. To investigate the relative importance of each of these six components, we carry out an ablation study. In these study we take $ewp-psg-CATS$ and measure its performance after removing different combinations of vectors from the concatenation step. Please refer to Table \ref{tab:abl} for the results. For brevity, we report only the three cases used for the significance test discussed previously. 
 
+\begin{small}
 \begin{table}[t]
 \centering
 %\ra{1.3}
@@ -152,27 +157,28 @@ One important aspect to note here is that the adjusted RAND index score has non-
 \cmidrule(r){2-3}
 \cmidrule(r){4-4}
 Combination & hs k=t & ln k=t & k=t \\\midrule
-1. v',w' & 0.0207 & 0.0382 & 0.0151 \\ 
-2. v',w',(v'-w') & 0.2198 & 0.2523 & 0.2349 \\
-3. u',v',w' & 0.0328 & 0.0415 & 0.0272 \\
-4. u',v',w',(v'-w') & 0.2198 & 0.2690 & 0.2150 \\
-5. u',v',w',(v'-u'),(w'-u') & 0.0359 & 0.0447 & 0.0241 \\
-6. v',w',(v'-u'),(w'-u') & 0.0290 & 0.0434 & 0.0239 \\
-7. v',w',(v'-w'),(v'-u'),(w'-u') & 0.2429 & 0.2795 & 0.2474 \\
-8. (v'-w'),(v'-u'),(w'-u') & 0.2193 & 0.2639 & 0.2441 \\
-9. (v'-u'),(w'-u') & 0.0281 & 0.0469 & 0.0235 \\
-\textbf{10. u',v',w',(v'-w'),(v'-u'),(w'-u')} & 0.2380 & 0.2772 & 0.2319 \\
+1. p1',p2' & 0.0207 & 0.0382 & 0.0151 \\ 
+2. p1',p2',(p1'-p2') & 0.2198 & 0.2523 & 0.2349 \\
+3. q',p1',p2' & 0.0328 & 0.0415 & 0.0272 \\
+4. q',p1',p2',(p1'-p2') & 0.2198 & 0.2690 & 0.2150 \\
+5. q',p1',p2',(p1'-q'),(p2'-q') & 0.0359 & 0.0447 & 0.0241 \\
+6. p1',p2',(p1'-q'),(p2'-q') & 0.0290 & 0.0434 & 0.0239 \\
+7. p1',p2',(p1'-p2'),(p1'-q'),(p2'-q') & 0.2429 & 0.2795 & 0.2474 \\
+8. (p1'-p2'),(p1'-q'),(p2'-q') & 0.2193 & 0.2639 & 0.2441 \\
+9. (p1'-q'),(p2'-q') & 0.0281 & 0.0469 & 0.0235 \\
+\textbf{10. q',p1',p2',(p1'-p2'),(p1'-q'),(p2'-q')} & 0.2380 & 0.2772 & 0.2319 \\
 \bottomrule
 \end{tabular}
 \caption*{Bold text refers to the combination used for our experiments \\
-u',v',w': Refer to Figure \ref{fig:triam}}
+q',p1',p2': Refer to Figure \ref{fig:triam}}
 %\vspace{-3ex}
 \end{table}
+\end{small}
 
 From the result we can make the following observations:
-\begin{itemize}
-    \item Combination 1 and 2 do not involve context vector (u') and both of them performs worse than many other combinations involving context vector. Hence we can conclude that including context vector positively impacts model's ability to estimate topical similarity between passage embedding vectors.
-    \item Another interesting observation we make from Table \ref{tab:abl} is the fact that difference vectors are more helpful than original embedding vector. For example, inclusion of the difference vector between two passage embedding vectors (v'-w') in Combination 4 along with all three embedding vectors (u',v',w') resulted in large performance gain over Combination 3. In fact Combination 8 which uses only the difference vectors, yields comparable results with best performing methods.
+\begin{itemize}[leftmargin=.15in]
+    \item Combination 1 and 2 do not involve context vector (q') and both of them performs worse than many other combinations involving context vector. Hence we can conclude that including context vector positively impacts the model's ability to estimate topical similarity between passage embedding vectors.
+    \item Another interesting observation we make from Table \ref{tab:abl} is the fact that difference vectors are more helpful than original embedding vector. For example, inclusion of the difference vector between two passage embedding vectors (p1'-p2') in Combination 4 along with all three embedding vectors (q',p1',p2') resulted in large performance gain over Combination 3. In fact Combination 8 which uses only the difference vectors, yields comparable results with best performing methods.
     \item We observe that Combination 7 obtains slightly better results than Combination 10 (all six components) which is used for our clustering study. This suggests that the success of CATS comes from the difference vectors between passage and context, and not from the context vector itself. 
 \end{itemize}
 
@@ -180,25 +186,19 @@ As discussed before, we use the title of articles as our context information. Th
 
 \subsection{Qualitative study} We conduct a qualitative analysis on the clustering evaluation. The aim of this analysis is to explain why some of the methods we present here are better than the rest and to provide example cases from the dataset bolstering the explanation.
 
-Consider the following pair of passages from Y1 test dataset:
+Consider the following pair of passages from \textbf{trec y1 test} dataset:
 
-\noindent\fbox{%
-    \parbox{0.48\textwidth}{%
-        \textbf{Passage 1: } Gardens in Renaissance were adorned with sculptures, topiary and fountains. In the 17th century, knot gardens became popular along with the hedge mazes. By this time, Europeans started planting new flowers such as tulips, marigolds and sunflowers. \\
-        \textbf{Passage 2: } Islamic gardens were built after the model of Persian gardens and they were usually enclosed by walls and divided in 4 by watercourses. Commonly, the center of the garden would have a pool or pavilion. Specific to the Islamic gardens are the mosaics and glazed tiles used to decorate the rills and fountains that were built in these gardens.
-    }%
-}
+\textbf{Passage 1: } \textit{Gardens in Renaissance were adorned with sculptures, topiary and fountains. In the 17th century, knot gardens became popular along with the hedge mazes. By this time, Europeans started planting new flowers such as tulips, marigolds and sunflowers.}
 
-From only the text of the passages, it is quite difficult to decide whether they are similar enough to share same subtopic cluster. In context of human culture they are topically distinct but in context of history of gardening, they are similar. Due to this ambiguity, $en-psg-cos$, which does not have access to the context information, assigned low similarity score to this passage pair. But the passage pair is taken from the Y1 test article titled \textit{"Gardening"} and share the \textit{"History (of gardening)"} subtopic. Access to this piece of information (article title) helps the CATS variant $en-psg-CATS$ to resolve the ambiguity and as a result it is able to correctly assign high similarity scores between them.
+\textbf{Passage 2: } \textit{Islamic gardens were built after the model of Persian gardens and they were usually enclosed by walls and divided in 4 by watercourses. Commonly, the center of the garden would have a pool or pavilion. Specific to the Islamic gardens are the mosaics and glazed tiles used to decorate the rills and fountains that were built in these gardens.}
 
-The previous example is a case of false negative which is rectified by the CATS approach. However, we find this to be rare instance across both the datasets and embedding methods. The dominant reason for CATS approach to achieve better results is its ability to identify false positive cases. Let us consider another pair of passages again from Y1 test dataset:
+From only the text of the passages, it is quite difficult to decide whether they are similar enough to share same subtopic cluster. In context of human culture they are topically distinct but in context of history of gardening, they are similar. Due to this ambiguity, $en-psg-cos$, which does not have access to the context information, assigned low similarity score to this passage pair. But the passage pair is taken from the \textbf{trec y1 test} article titled \textit{"Gardening"} and share the \textit{"History (of gardening)"} subtopic. Access to this piece of information (article title) helps the CATS variant $en-psg-CATS$ to resolve the ambiguity and as a result it is able to correctly assign high similarity scores between them.
 
-\noindent\fbox{%
-    \parbox{0.48\textwidth}{%
-        \textbf{Passage 1: } Big-game fishing started as a sport after the invention of the motorized boat.  In 1898, Dr. Charles Frederick Holder, a marine biologist and early conservationist, pioneered this sport and went on to publish many articles and books on the subject noted for their combination of accurate scientific detail with exciting narratives. \\
-        \textbf{Passage 2: } In addition to capturing fish for food, recreational anglers might also keep a log of fish caught, either in a physical form or with technology such as the FISHBUOY or Fishbrain mobile logging application, and submit trophy-sized fish to independent record keeping bodies. In the Republic of Ireland, the Irish Specimen Fish Committee ...... It also uses a set of 'fair play' regulations to ensure fish are caught in accordance with accepted angling norms.
-    }%
-}
+The previous example is a case of false negative which is rectified by the CATS approach. However, we find this to be rare instance across both the datasets and embedding methods. The dominant reason for CATS approach to achieve better results is its ability to identify false positive cases. Let us consider another pair of passages again from \textbf{trec y1 test} dataset:
+
+\textbf{Passage 1: } \textit{Big-game fishing started as a sport after the invention of the motorized boat.  In 1898, Dr. Charles Frederick Holder, a marine biologist and early conservationist, pioneered this sport and went on to publish many articles and books on the subject noted for their combination of accurate scientific detail with exciting narratives.}
+
+\textbf{Passage 2: } \textit{In addition to capturing fish for food, recreational anglers might also keep a log of fish caught, either in a physical form or with technology such as the FISHBUOY or Fishbrain mobile logging application, and submit trophy-sized fish to independent record keeping bodies. In the Republic of Ireland, the Irish Specimen Fish Committee ...... It also uses a set of 'fair play' regulations to ensure fish are caught in accordance with accepted angling norms.}
 
 It is evident that these two passages share topics such as \textit{"fishing"}, \textit{"sport"}, and consequently influence non-CATS method such as $ewp-psg-cos$ to incorrectly assign high similarity score. However, when we are aware that both these passages are taken from an article titled \textit{"Recreational fishing"}, then other less overt topics become more important in deciding their subtopic similarity. As there are little topical overlap other than the central context, $ewp-psg-cos$ assigns low similarity score for the pair. Indeed these two passages are taken from different subtopics, \textit{"History"} and \textit{"Fish logs"} respectively. 
 
@@ -206,7 +206,7 @@ It is evident that these two passages share topics such as \textit{"fishing"}, \
 Mu et al. \cite{mu2017all} had shown that much of the variance of popular word embedding vectors are explained by only a small subset of vector dimensions. In their study, they develop a simple post-processing technique which made the embeddings more effective by eliminating those dominating embedding dimensions, as opposed to eliminating the weakest dimensions in case of typical dimensionality reduction techniques. According to their findings, their technique can be used to initialize embedding vectors for supervised downstream tasks. However, when used with our best performing CATS variant $q-ewp$, it does not yield any significant improvement.
 
 All passage embeddings used for our evaluation are of length 768. Reducing the dimensionality of embeddings without significantly hurting the performance, benefit memory-constrained downstream applications. Raunak et al. \cite{raunak2019effective} propose a dimensionality reduction technique that combines PCA with Mu et al. post-processing algorithm, suitable for word embeddings. We explore the applicability of their technique to passage embeddings in comparison to simple PCA. Our findings, presented in Figure \ref{fig:dimred}, lead to interesting insights. As expected, for $ewp$ and $ews$, reducing dimensionality using normal PCA degrades performance in terms of AUC score for binary classification task. However, the performance degrades even further when we apply the technique by Raunak et al. On the other hand, for $en$ and $ens$, reduced embedding vectors produce improved results compared to the original vector. More interestingly, the improvement sustains even if the embedding size is reduced to only 100. Our conclusions from this observation are as follows:
-\begin{itemize}
+\begin{itemize}[leftmargin=.15in]
     \item The key difference between $en, ens$ and $ewp, ews$ is the incorporation of Wikipedia section information for the later two. The dimensionality reduction technique by Raunak et al. eliminates dominating dimensions similar to Mu et al. and eliminates weakest dimensions using PCA. As our evaluation results show, applying Raunak et al. method hurts the performance much more than a simple PCA dimensionality reduction. This suggests that important Wikipedia hierarchy information is concentrated in dominant dimensions of these passage embeddings and when those dimensions are eliminated, the performance degradation is much severe than simple PCA.
     \item For $en, ens$, dimensionality reduction results in improved performance and the improvement is slightly higher for Raunak et al. This finding aligns with the work of Mu et al. and Raunak et al. with word embeddings. Unlike $ewp, ews$, these embeddings do not have essential information concentrated in specific sets of dimensions and hence do not lose important insights upon removal of dominant or weak dimensions. In fact they benefit from denoising nature of these post-processing techniques.
 \end{itemize}

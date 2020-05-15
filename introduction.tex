@@ -41,7 +41,7 @@ So a clear gap of research has emerged from the previous discussion: Transformer
 %So we identify two major complementary avenues of research: \ld{it was unclear what option 1 and 2 are, I placed numbers, hoping it would help, but I am not sure I placed them right} (1) Transformer models which have been successful in solving numerous NLP problems and (2) difficult IR problems such as subtopic clustering which can surely benefit from a well-suited language understanding model such as BERT \ld{I don't get how "difficult IR problems" is an avenue for research}. We bridge this gap \ld{which gap is that?} by utilizing Transformer-based embedding models with novel \ld{I dropped "simple yet powerful"} modifications that allow us to embed passage-sized texts. A thorough evaluation of our passage embedding methods show that BERT-like complex models can be adapted to \ld{Drop: "difficult IR tasks such as"} subtopic clustering without major architectural changes. 
 The contributions of this work are as follows:
 
-\begin{itemize}
+\begin{itemize}[leftmargin=.15in]
     \item Explore simple modifications to BERT-based sentence embedding methods that can be trained and used to embed passage-sized texts.
     \item We propose CATS: Context Aware Triamese Similarity network, a supervised similarity metric which calculates the similarity score between a pair of passage embeddings while taking the context into consideration.
     \item Using the proposed modifications, we present a solution to the subtopic clustering problem.
