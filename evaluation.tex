@@ -1,8 +1,8 @@
-\subsection{Experimental settings} The central theme of our work is to explore an efficient way to make use of embeddings and Transformer models to represent passage-length texts. We evaluate in an open-domain IR context, to which extend our approach for sub-topic clustering of passages can capture the fine-grained nuances in sub-topics among passages retrieved for an overarching topic. However as mentioned before, we train our models to learn pairwise distances between passages first, and then use the pairwise distances for clustering. We describe our clustering pipeline in the following:
+\subsection{Experimental settings} The central theme of our work is to explore an efficient way to make use of embeddings and Transformer models to represent passage-length texts. We evaluate in an open-domain IR context, to which extent our approach for sub-topic clustering of passages can capture the fine-grained nuances in sub-topics among passages retrieved for an overarching topic. However as mentioned before, we train our models to learn pairwise distances between passages first, and then use the pairwise distances for clustering. We describe our clustering pipeline in the following:
 \begin{itemize}
-    \item \textbf{Step 1: Binary classification into same/different sections} First, we train our supervised models to solve a binary classification problem. Given a pair of passages $p_1, p_2$ from an Wikipedia article, the model has to decide whether they should share the same section in that article or not. We use the TRECCAR-Train as our training data.
-    \item \textbf{Step 2: Extract pairwise distances between passage pairs} Using the trained model from previous step or other unsupervised models, we calculate pairwise distances between all passage pairs which we want to cluster. If a passage embedding model is being trained (e.g., ews or ewp) in Step 1, then a distance function (cosine distance or CATS) is used to generate passage similarity scores between pairs of passage embedding vectors. For CATS, it is trained again for binary classification task using TRECCAR-by1train dataset.
-    \item \textbf{Step 3: Subtopic clustering} Given a set of passages $P$ about a topic $T$, we have to generate $k$ clusters $c_1 .. c_k$ of passages, in such a way that each cluster $c_i$ coincides with a specific sub-topic of $T$. Using the pre-computed pairwise distances as input, we use Hierarchical Agglomerative clustering with average linkage to obtain clusters of passages from same article.
+    \item \textbf{Step 1: Binary classification into same/different sections} First, we train our supervised models to solve a query-specific binary classification problem. Given a pair of passages $p_1, p_2$ from an Wikipedia article, the model has to decide whether they should share the same section in that article or not.
+    \item \textbf{Step 2: Extract pairwise similarity score between passage pairs} From the model trained in previous step or other unsupervised models, we extract pairwise similarity scores between all passage pairs which we want to cluster. If a passage embedding model is being trained in Step 1, then a distance function (cosine distance or CATS) is used to generate passage similarity scores between pairs of passage embedding vectors. For CATS, it is trained again for binary classification task using a different split of the training dataset used to train its underlying embedding model before using it to generate the similarity scores.
+    \item \textbf{Step 3: Subtopic clustering} Given a set of passages $P$ about a topic $T$, we have to generate $k$ clusters $c_1 .. c_k$ of passages, in such a way that each cluster $c_i$ coincides with a specific sub-topic of $T$. Using the pre-computed pairwise similarity scores as input, we use Hierarchical Agglomerative clustering with average linkage to obtain clusters of passages from same article.
 \end{itemize}
 
 The training and evaluation phase of the clustering pipeline is depicted in Figure \ref{fig:pipe}.
@@ -14,13 +14,13 @@ The training and evaluation phase of the clustering pipeline is depicted in Figu
 \end{figure}
 
 \subsection{Training and evaluation data} 
-We use several parts of a publicly available TREC Complex Answer Retrieval dataset \cite{dietz2017trec} for training and evaluating our models: benchmarkY1-train.v2.0 (trec y1 train), benchmarkY1-test (trec y1 test), benchmarkY2test-auto-manual-qrels (trec y2 test), and train.v2.0 (trec train). The dataset consists of a large corpus of text passages extracted from Wikipedia and text book articles. One of the target task described by the organizers of the CAR challenge  is a passage retrieval task where we have to retrieve relevant passages from the corpus for complex queries. The query set is derived from concatenating section headings of an article with its article title. The automatic benchmark will, for such queries, only consider passages as relevant if they originate from the corresponding section of the article. This relevance information is used to obtain the hierarchical structure of each article in the dataset; these are used as input to our training data generation method depicted in Figure \ref{fig:conv}. \ld{this needs to also be explained in prose} The process produces passage similarity data for training the query-dependent binary classification task and is used in step 1 (and step 2 for CATS) of our subtopic clustering pipeline.
+We use several parts of a publicly available TREC Complex Answer Retrieval dataset \cite{dietz2017trec}\footnote{http://trec-car.cs.unh.edu/datareleases/} for training and evaluating our models: benchmarkY1-train.v2.0 (trec y1 train), benchmarkY1-test (trec y1 test), benchmarkY2test-auto-manual-qrels (trec y2 test), and train.v2.0 (trec train). The dataset consists of a large corpus of text passages extracted from Wikipedia and text book articles. One of the target task described by the organizers of the CAR challenge  is a passage retrieval task where we have to retrieve relevant passages from the corpus for complex queries. The query set is derived from concatenating section headings of an article with its article title. The automatic benchmark will, for such queries, only consider passages as relevant if they originate from the corresponding section of the article. This relevance information is used to obtain the hierarchical structure of each article in the dataset; these are used as input to our training data generation method depicted in Figure \ref{fig:conv}. The resulting dataset consists of passage-pairs, each with the title of the source article and a binary label that denotes whether the passage-pair is from the same section of the article.
 
 %Each part has ground truth information contained in qrels files which inform about relevance of passages to different hierarchical sections of an Wikipedia article. For trec y1 parts, it has two different levels of hierarchical relevance: hierarchical qrels considers each section in Wikipedia articles as different topics and maps relevant passages accordingly. Toplevel qrels does not consider deeper level sections and maps all passages from deeper level sections to the section on the topmost level of the section hierarchy.
 
-\subsubsection{Training data} Using the technique depicted in Figure \ref{fig:conv}, we convert subset of trec train and trec y1 train dataset from TRECCAR to our training sets \textbf{Train-TRECCAR} and \textbf{by1train-TRECCAR} respectively. We also generate two triplet dataset to fine-tune text embedding models similar to the model by Dor et al. . The dataset \textbf{Train-triplet-psg} contains samples of passage triplets as $(p_a, p_s, p_d)$ where $p_a$ and $p_s$ are similar and $p_d$ is dissimilar according to Train-TRECCAR. \textbf{Train-triplet-sent} is constructed similar to Train-triplet-psg except we take a random sentence from each passage in a triplet instead of the whole passage text.
+\subsubsection{Training data} Using the technique depicted in Figure \ref{fig:conv}, we convert subset of \textbf{trec train} and \textbf{trec y1 train} dataset from TRECCAR to \textbf{Train-binary} and \textbf{by1train-binary} respectively. We also generate two triplet dataset to fine-tune text embedding models similar to the model by Dor et al. . The dataset \textbf{Train-triplet-psg} contains samples of passage triplets as $(p_a, p_s, p_d)$ where $p_a$ and $p_s$ are similar and $p_d$ is dissimilar according to \textbf{Train-binary}. \textbf{Train-triplet-sent} is constructed similar to \texbf{Train-triplet-psg} except we take a random sentence from each passage in a triplet instead of the whole passage text.
 
-\subsubsection{Evaluation data} We evaluate our models on both the query-specific binary classification task and the clustering task. The former task is evaluated on \textbf{Y1 test} and \textbf{Y2 test}, converted from trec y1 test and trec y2 test, similar to \textbf{Train-TRECCAR}. For the clustering task, we use the section-passage relevance information provided in the automatic ground truth of TREC CAR dataset to construct the clustering ground truth of true passage clusters in articles. However, based on topical diversity inside a cluster, we construct two different clustering ground truths:
+\subsubsection{Evaluation data} We evaluate our models on both the query-specific binary classification task and the clustering task. The former task is evaluated on \textbf{Test1-binary} and \textbf{Test2-binary}, converted from \textbf{trec y1 test} and \textbf{trec y2 test}, similar to \textbf{Train-binary}. For the clustering task, we use the section-passage relevance information provided in the automatic ground truth of TREC CAR dataset to construct the clustering ground truth of true passage clusters in articles. However, based on topical diversity inside a cluster, we construct two different clustering ground truths:
 
 \begin{itemize}
     \item \textit{Lenient (ln)} We consider all passages under the same top-level section to be a single cluster. For example: passages relevant for \textit{Amur Leopard/Threats}, \textit{Amur Leopard/Threats/Forest degradation}, and \textit{Amur Leopard/Threats/Poaching} are considered part of same \textit{"Threat"} cluster.
@@ -29,18 +29,20 @@ We use several parts of a publicly available TREC Complex Answer Retrieval datas
 
 \subsection{Experimental models} We experiment with the following models:
 \begin{itemize}
-    \item \textbf{BERT models} BERT base cased (bert-c) and BERT base uncased (bert-u) pretrained models finetuned using Train-TRECCAR.
+    \item \textbf{BERT models} BERT-base cased (bertc) and BERT-base uncased (bertu) pretrained models finetuned using \textbf{Train-binary}.
     \item \textbf{Passage embedding models} Four variations of Sentence-BERT models are used to generate passage embeddings: 
     \begin{itemize}
         \item \textit{en:} BERT-base model with mean-tokens pooling trained on SNLI and MultiNLI dataset.
-        \item \textit{ens:} Same as en but first fine-tuned on the AllNLI datasent, then on train set of STS benchmark.
-        \item \textit{ews:} Version of Dor et al. text embeddings which are fine-tuned on triplets generated from Wikipedia sections. However to prevent training data leakage, we fine-tuned the model using sentence triplets generated from Train-TRECCAR (called Train-triplet-sent), instead of the training dataset provided by the authors.
-        \item \textit{ewp:} Same as ews but the model is trained on triples of passages instead of sentences (called Train-triplet-psg) from Train-TRECCAR.
+        \item \textit{ens:} Same as \textit{en} but first fine-tuned on the AllNLI datasent, then on train set of STS benchmark.
+        \item \textit{ews:} Version of Dor et al. text embeddings which are fine-tuned on triplets generated from Wikipedia sections. However to prevent training data leakage, we fine-tuned the model using \textbf{Train-triplet-sent}, instead of the training dataset provided by the authors.
+        \item \textit{ewp:} Same as \textit{ews} but the model is trained on \textbf{Train-triplet-psg}.
     \end{itemize}
     Each of the models above are used to generate passage embeddings in two ways: \textit{I. } By using the whole passage text as a single long input sequence and \textit{II. } By averaging sentence embeddings generated for each sentence of a passage. 
-    \item \textbf{CATS} We train our CATS model discussed in Section \ref{sec:cats}, for each of the passage embedding methods using by1train-TRECCAR dataset. We use the embedding vector of the article title as the as the query-specific context information for CATS, as intended by the CAR track organizers.
-    \item We use three unsupervised baseline methods: bm25, tfidf, and LDA topic model. To calculate similarity score between a pair of passages, \textbf{i. bm25:} we take the average of two BM25 similarity scores calculated using each passage in the pair as query and the other as document. \textbf{ii. tfidf:} we take the cosine similarity score of the TFIDF vectors representing the passages in the pair. \textbf{iii. LDA:} we take the KL-divergence score between the topic distribution of the passages in the pair, estimated using LDA topic model.
+    \item \textbf{CATS} We train our CATS model discussed in Section \ref{sec:cats}, for each of the passage embedding methods using \textbf{by1train-binary} dataset. We use the embedding vector of the article title as the query-specific context information for CATS, as intended by the CAR track organizers.
+    \item We use three unsupervised baseline methods: bm25, tfidf, and LDA topic model. To calculate similarity score between a pair of passages, \textbf{i. bm25:} we take the average of two BM25 similarity scores calculated using each passage in the pair as query and the other as document. \textbf{ii. tfidf:} we take the cosine similarity score of the TFIDF vectors representing the passages in the pair. \textbf{iii. LDA:} we take the Jensen-Shannon divergence score between the topic distribution of the passages in the pair, estimated using LDA topic model with 100 topics trained on raw text from \textbf{trec train}.
 \end{itemize}
+
+We refer to all our models by the following simple nomenclature: \texttt{EMB-GEN-DIST} where $EMB$ denotes the embedding model used ($en/ens/ews/ewp$), $GEN$ denotes whether we use the whole passage text or individual sentences as input while generating the embeddings ($psg/sent$) and finally $DIST$ denotes which type of distance function we use to obtain the similarity scores between two passage embedding vectors (cosine distance or $CATS$). Table \ref{tab:dat} shows the training datasets used to train different models.
 
 \begin{table}[t]
 \centering
@@ -49,8 +51,8 @@ We use several parts of a publicly available TREC Complex Answer Retrieval datas
 \label{tab:dat}
 \begin{tabular}{@{}lrr@{}}\toprule
 Training data & Generated from & Used to train \\\midrule
-Train-TRECCAR & trec train & bertc, bertu \\
-by1train-TRECCAR & trec y1 train & e*-(psg/sent)-CATS \\
+Train-binary & trec train & bertc, bertu \\
+by1train-binary & trec y1 train & e*-(psg/sent)-CATS \\
 Train-triplet-psg & trec train & ewp \\
 Train-triplet-sent & trec train & ews \\
 \bottomrule
@@ -59,17 +61,15 @@ Train-triplet-sent & trec train & ews \\
 %\vspace{-3ex}
 \end{table}
 
-We refer to all passage embedding models by the following simple nomenclature: \texttt{EMB-GEN-DIST} where $EMB$ denotes the embedding model used ($en/ens/ews/ewp$), $GEN$ denotes whether we use the whole passage text or individual sentences as input while generating the embeddings ($psg/sent$) and finally $DIST$ denotes which type of distance function we use to obtain the similarity scores between two passage embedding vectors ($cos/CATS$). Table \ref{tab:dat} shows the training datasets used to train different models.
-
-\subsection{Subtopic clustering} For each article in \textbf{Y1 test} and \textbf{Y2 test}, we cluster all passages from the article using our clustering pipeline discussed before. The clustering results are evaluated using mean Adjusted RAND index \cite{hubert1985comparing}, which measures the agreement between the resulting cluster with the true cluster from ground truth, across all the articles in each dataset. For evaluation purposes we pretend to know the right number of sections of an article, referred here as $k$. In real-world applications, we find that most articles have a typical number of sections, which we would use to determine $k$. Alternatively, work on Dirichlet processes are an avenue of learning and predicting the right number of subtopics along with the data \cite{griffiths2004hierarchical, blei2011distance}. Based on $k$, we evaluate two scenarios: the true number of clusters for each article is i) provided ($k=$true) ii) not provided, so a fixed cluster number is predetermined (e.g. $k=$6). For each case, we evaluate the clusters against both the \textit{lenient} and \textit{hierarchical} clustering ground truth for Y1 test. For Y2 test, we only evaluate on \textit{lenient} ground truth. The supervised methods were actually trained on binary classification task, so we also report the binary classification evaluation scores in terms of AUC score (Area under the receiver operating characteristics curve). Please refer to Table \ref{tab:by1} for the evaluation results.
+\subsection{Subtopic clustering} For each article in \textbf{trec y1 test} and \textbf{trec y2 test}, we cluster all passages from the article using our clustering pipeline discussed before. The clustering results are evaluated using mean Adjusted RAND index \cite{hubert1985comparing}, which measures the agreement between the resulting cluster with the true cluster from ground truth, across all the articles in each dataset. For evaluation purposes we pretend to know the right number of sections of an article, referred here as $k$. In real-world applications, we find that most articles have a typical number of sections, which we would use to determine $k$. Alternatively, work on Dirichlet processes are an avenue of learning and predicting the right number of subtopics along with the data \cite{griffiths2004hierarchical, blei2011distance}. Based on $k$, we evaluate two scenarios: the true number of clusters for each article is i) provided ($k=$true) ii) not provided, so a fixed cluster number is predetermined (e.g. $k=$6). For each case, we evaluate the clusters against both the \textit{lenient} and \textit{hierarchical} clustering ground truth for Y1 test. For Y2 test, we only evaluate on \textit{lenient} ground truth. The supervised methods were actually trained on binary classification task, so we also report the binary classification evaluation scores in terms of AUC score (Area under the receiver operating characteristics curve). Please refer to Table \ref{tab:by1} for the evaluation results.
 
 \begin{table*}[t]
 \centering
 %\ra{1.3}
-\caption{Task performance measured in terms of macro averaged evaluation score and paired ttest with respect to $bertu$ with $\alpha = 0.05$}
+\caption{Task performance measured in terms of macro averaged evaluation score and Bonferroni corrected paired ttest with respect to $bertu$ with $\alpha = 0.05$ (Bonferroni corrected $\alpha = 0.00625$)}
 \label{tab:by1}
 \begin{tabular}{@{}lrrrrrrrrr@{}}\toprule
-& \multicolumn{5}{c}{Y1 test} && \multicolumn{3}{c}{Y2 test}  \\
+& \multicolumn{5}{c}{trec y1 test} && \multicolumn{3}{c}{trec y2 test}  \\
 \cmidrule(r){2-6}
 \cmidrule(r){8-10}
 %\cmidrule{2-6} 
@@ -79,21 +79,21 @@ tfidf & 0.6776 & 0.0695 & 0.1145 & 0.0664 & 0.0703 && 0.6082 & 0.0533 & 0.0647 \
 LDA & 0.4385 & 0.0025 & 0.0108 & 0.0040 & 0.0087 && 0.4618 & 0.0160 & 0.0132 \\
 bertc & 0.7771 & 0.1373 & 0.2300 & 0.1797 & 0.2078 && 0.6920 & 0.2275 & 0.2368 \\ 
 bertu & 0.7778 & 0.1303 & 0.2140 & 0.1789 & 0.1912 && 0.6876 & 0.1824 & 0.1821 \\\midrule
-ews-psg-cos & 0.7910 & 0.1451 & 0.2085 & $\blacktriangle$ 0.2302 & $\blacktriangle$ 0.2397 && $\blacktriangle$ \textbf{0.7194} & $\blacktriangle$ 0.2261 & $\blacktriangle$ 0.2422 \\ 
-ewp-psg-cos & $\blacktriangle$ 0.7995 & 0.1502 & 0.2074 & $\blacktriangle$ 0.2245 & $\blacktriangle$ 0.2503 && $\blacktriangle$ 0.7089 & $\blacktriangle$ 0.2574 & $\blacktriangle$ 0.2261 \\ 
+ews-psg-cos & 0.7910 & 0.1451 & 0.2085 & $\blacktriangle$ 0.2302 & $\blacktriangle$ 0.2397 && $\blacktriangle$ \textbf{0.7194} & 0.2261 & 0.2422 \\ 
+ewp-psg-cos & $\blacktriangle$ 0.7995 & 0.1502 & 0.2074 & $\blacktriangle$ 0.2245 & $\blacktriangle$ 0.2503 && 0.7089 & $\blacktriangle$ 0.2574 & 0.2261 \\ 
 en-psg-cos & $\blacktriangledown$ 0.6686 & $\blacktriangledown$ 0.0559 & $\blacktriangledown$ 0.1018 & $\blacktriangledown$ 0.0771 & $\blacktriangledown$ 0.0910 && $\blacktriangledown$ 0.6302 & $\blacktriangledown$ 0.1041 & $\blacktriangledown$ 0.0990 \\ 
 ens-psg-cos & $\blacktriangledown$ 0.6727 & $\blacktriangledown$ 0.0575 & $\blacktriangledown$ 0.1073 & $\blacktriangledown$ 0.0701 & $\blacktriangledown$ 0.0883 && $\blacktriangledown$ 0.6261 & $\blacktriangledown$ 0.0899 & $\blacktriangledown$ 0.0963 \\\midrule
-ews-sent-cos & $\blacktriangledown$ 0.7379 & $\blacktriangledown$ 0.0882 & $\blacktriangledown$ 0.1564 & 0.1487 & 0.1708 && 0.6815 & 0.1515 & $\blacktriangledown$ 0.1326 \\ 
-ewp-sent-cos & $\blacktriangledown$ 0.7350 & $\blacktriangledown$ 0.0951 & $\blacktriangledown$ 0.1589 & 0.1530 & 0.1663 && 0.6713 & $\blacktriangledown$ 0.1164 & $\blacktriangledown$ 0.1172 \\ 
-en-sent-cos & $\blacktriangledown$ 0.6629 & $\blacktriangledown$ 0.0644 & $\blacktriangledown$ 0.1118 & $\blacktriangledown$ 0.0918 & $\blacktriangledown$ 0.0971 && $\blacktriangledown$ 0.6313 & $\blacktriangledown$ 0.1119 & $\blacktriangledown$ 0.1075 \\ 
+ews-sent-cos & $\blacktriangledown$ 0.7379 & $\blacktriangledown$ 0.0882 & $\blacktriangledown$ 0.1564 & 0.1487 & 0.1708 && 0.6815 & 0.1515 & 0.1326 \\ 
+ewp-sent-cos & $\blacktriangledown$ 0.7350 & 0.0951 & $\blacktriangledown$ 0.1589 & 0.1530 & 0.1663 && 0.6713 & 0.1164 & $\blacktriangledown$ 0.1172 \\ 
+en-sent-cos & $\blacktriangledown$ 0.6629 & $\blacktriangledown$ 0.0644 & $\blacktriangledown$ 0.1118 & $\blacktriangledown$ 0.0918 & $\blacktriangledown$ 0.0971 && $\blacktriangledown$ 0.6313 & 0.1119 & $\blacktriangledown$ 0.1075 \\ 
 ens-sent-cos & $\blacktriangledown$ 0.6728 & $\blacktriangledown$ 0.0598 & $\blacktriangledown$ 0.1037 & $\blacktriangledown$ 0.0856 & $\blacktriangledown$ 0.0929 && $\blacktriangledown$ 0.6280 & $\blacktriangledown$ 0.0801 & $\blacktriangledown$ 0.0797 \\\midrule
-ews-psg-CATS & $\blacktriangle$ 0.7953 & $\blacktriangle$ 0.1623 & 0.2289 & $\blacktriangle$ 0.2445 & $\blacktriangle$ 0.2698 && $\blacktriangle$ 0.7173 & $\blacktriangle$ 0.2401 & $\blacktriangle$ \textbf{0.2517} \\ 
-ewp-psg-CATS & $\blacktriangle$ \textbf{0.8045} & $\blacktriangle$\textbf{0.1742} & \textbf{0.2380} & $\blacktriangle$ \textbf{0.2605} & $\blacktriangle$ \textbf{0.2772} && $\blacktriangle$ 0.7097 & $\blacktriangle$ \textbf{0.2640} & $\blacktriangle$ 0.2319 \\ 
+ews-psg-CATS & 0.7953 & 0.1623 & 0.2289 & $\blacktriangle$ 0.2445 & $\blacktriangle$ 0.2698 && $\blacktriangle$ 0.7173 & 0.2401 & $\blacktriangle$ \textbf{0.2517} \\ 
+ewp-psg-CATS & $\blacktriangle$ \textbf{0.8045} & $\blacktriangle$\textbf{0.1742} & \textbf{0.2380} & $\blacktriangle$ \textbf{0.2605} & $\blacktriangle$ \textbf{0.2772} && 0.7097 & $\blacktriangle$ \textbf{0.2640} & 0.2319 \\ 
 en-psg-CATS & $\blacktriangledown$ 0.7089 & 0.1106 & $\blacktriangledown$ 0.1382 & 0.1657 & 0.1608 && $\blacktriangledown$ 0.6520 & 0.1688 & 0.1623 \\ 
 ens-psg-CATS & $\blacktriangledown$ 0.7094 & 0.1098 & $\blacktriangledown$ 0.1522 & 0.1561 & 0.1639 && $\blacktriangledown$ 0.6441 & 0.1533 & 0.1573 \\\midrule
-ews-sent-CATS & 0.7673 & 0.1451 & 0.2041 & $\blacktriangle$ 0.2331 & $\blacktriangle$ 0.2481 && $\blacktriangle$ 0.7145 & 0.2140 & $\blacktriangle$ 0.2242 \\ 
-ewp-sent-CATS & 0.7754 & 0.1539 & 0.2136 & $\blacktriangle$ 0.2314 & $\blacktriangle$ 0.2354 && 0.6995 & 0.2008 & 0.2024 \\ 
-en-sent-CATS & $\blacktriangledown$ 0.7032 & $\blacktriangledown$ 0.0931 & $\blacktriangledown$ 0.1317 & $\blacktriangledown$ 0.1461 & 0.1673 && $\blacktriangledown$ 0.6572 & 0.1597 & 0.1563 \\ 
+ews-sent-CATS & 0.7673 & 0.1451 & 0.2041 & $\blacktriangle$ 0.2331 & $\blacktriangle$ 0.2481 && 0.7145 & 0.2140 & 0.2242 \\ 
+ewp-sent-CATS & 0.7754 & 0.1539 & 0.2136 & $\blacktriangle$ 0.2314 & 0.2354 && 0.6995 & 0.2008 & 0.2024 \\ 
+en-sent-CATS & $\blacktriangledown$ 0.7032 & 0.0931 & $\blacktriangledown$ 0.1317 & 0.1461 & 0.1673 && $\blacktriangledown$ 0.6572 & 0.1597 & 0.1563 \\ 
 ens-sent-CATS & $\blacktriangledown$ 0.7082 & 0.1041 & $\blacktriangledown$ 0.1484 & 0.1512 & 0.1663 && $\blacktriangledown$ 0.6416 & 0.1624 & 0.1449 \\ 
 \bottomrule
 \end{tabular}
@@ -113,16 +113,13 @@ k: number of clusters, k=true: original number of clusters in each article}
 
 \subsubsection{Significance test} We have seen from Table \ref{tab:by1} that our proposed CATS method improves all four passage embedding methods explored here. Now to investigate whether the improvement is statistically significant, we conduct paired ttest between each CATS version of passage embedding method and its cosine version. We choose $\alpha = 0.05$ for this study. For brevity, we consider three different cases: Y1 test with hierarchical and lenient ground truth, and Y2 test, both with true number of clusters provided. We report the obtained p-value from the experiments in Table \ref{tab:sigt}. The results confirm that all improvements due to CATS are statistically significant for Y1 test dataset. Whereas for Y2 test, improvements for $en, ens$ methods are statistically significant.
 
-\ld{I like this discussion on significance, but it really will raise the question on whether you need a "correction for multiple hypothesis testing" also called Bonferroni correction -- its just some more math on top of the p-value, we just need to look up how it works exactly.}
-
-
 \begin{table}[t]
 \centering
 %\ra{1.3}
 \caption{Significance test of passage embedding methods with respect to its corresponding CATS version with $\alpha = 0.05$}
 \label{tab:sigt}
 \begin{tabular}{@{}lrrrr@{}}\toprule
-&& \multicolumn{2}{c}{Y1 test} & Y2 test  \\
+&& \multicolumn{2}{c}{trec y1 test} & trec y2 test  \\
 \cmidrule(r){3-4}
 \cmidrule(r){5-5}
 Method 1 & Method 2 & hs k=t & ln k=t & k=t \\\midrule
@@ -151,7 +148,7 @@ One important aspect to note here is that the adjusted RAND index score has non-
 \caption{Ablation study of different components for concatenation}
 \label{tab:abl}
 \begin{tabular}{@{}lrrr@{}}\toprule
-& \multicolumn{2}{c}{Y1 test} & Y2 test  \\
+& \multicolumn{2}{c}{trec y1 test} & trec y2 test  \\
 \cmidrule(r){2-3}
 \cmidrule(r){4-4}
 Combination & hs k=t & ln k=t & k=t \\\midrule
