@@ -3,7 +3,7 @@ It is observed in deep learning and transfer learning research that layers at di
 
 1. Averaging hidden layers tend to lose vital semantic information captured in separate layers of BERT. Instead Reimers et al. experiment with three pooling strtegies: CLS, max pooling, and mean pooling. 
 
-2. Also they use two different network structures to fine-tune these embeddings: Siamese networks for pairwise training data (binary similarity regression and multiclass classification) and triplet network for sentence triples (one anchor, similar, and not similar).
+2. Also they use two different network structures to fine-tune these embeddings: Siamese networks for pairwise training data (binary similarity regression and multiclass classification) and triplet network for sentence triples (anchor, similar, and not similar).
 
 3. They evaluate three different loss functions which will tune the embeddings for semantic similarity tasks. a) regression loss minimizes mean-squared error (MSE) between the similarity labels and cosine similarity between sentence embeddings, b) classification loss optimizes cross-entropy loss between weighted class probabilities from a concatenation of embeddings of sentence pair, c) triplet loss trains the network such that the distance between anchor sentence and positive sentence is higher than that of negative sentence.
 

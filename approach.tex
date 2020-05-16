@@ -4,17 +4,17 @@ As described earlier, subtopic clustering has always been a challenging task in 
     \item In high precision scenario where our candidate set size is small, it will be difficult to generate useful keyphrases
     \item Their method is evaluated with a non-standard evaluation metric
 \end{itemize}
-Hence we feel, the problem of subtopic clustering requires a generic solution which can be verified by standard clustering metrics. Transformer-based embedding model brings not only simplicity, efficiency and generality of an embedding model but also the ability to capture complex semantic information. Both of these features are necessary key-ingredients to solve challenging IR problems such as subtopic clustering. Our main focus in this section is to use these embeddings as key ingredients and find simple modifications that can capture subtopic similarity between passages related to a topic and thus can cluster them based on those subtopics.
+Hence we feel, the problem of subtopic clustering requires a generic solution which can be verified by standard clustering metrics. Transformer-based embedding model brings not only simplicity, efficiency and generality of an embedding model but also the ability to capture complex semantic information. Both of these features are essential in solving challenging IR problems such as subtopic clustering. Our main focus in this section is to use these embeddings as key ingredients and find simple modifications that can capture subtopic similarity between passages related to a topic and thus can cluster them based on those subtopics.
 
 \subsection{Basic steps to subtopic clustering} We model subtopic clustering task as a pairwise distance learning problem. Any subtopic clustering problem can be solved by two basic steps:
 \begin{itemize}[leftmargin=.15in]
-    \item Step 1: Estimate a pairwise supervised distance between all passage pairs.
-    \item Step 2: Use Hierarchical Agglomerative clustering with the pre-computed pairwise distance to generate clusters of passages.
+    \item Step 1: Estimate pairwise supervised similarity between all passage pairs.
+    \item Step 2: Use Hierarchical Agglomerative clustering with the pre-computed pairwise similarity to generate clusters of passages.
 \end{itemize}
 
 We focus on Step 1 to develop a suitable pairwise similarity metric between passages.
 
-\subsection{Transformer embeddings} In their Sentence-BERT work, authors generate fixed length embeddings for a given word sequence. Dor et al. \cite{dor2018learning} propose a triplet fine-tuning technique which trains the embeddings to be better suited in predicting similarity of sentence pairs based on their likeliness of sharing same section (subtopic) in an Wikipedia article about a topic. Each training example consists of one anchor sentence, one similar sentence which is from same section than the anchor and one dissimilar sentence which is from different section than anchor. Using each of these approaches, we obtain fixed length embeddings for passages using tokenized passages as input token sequence. A straight-forward approach for the subtopic clustering would use cosine similarity between these fixed-length vectors as to quantify the pairwise similarity between passages. The similarity scores are used in  a clustering algorithm to obtain subtopic clusters. Note that, transformer models have a maximum input length. So for longer passages tokens beyond the maximum length are truncated.
+\subsection{Transformer embeddings} As discussed before, in the Sentence-BERT work \cite{reimers2019sentence}, authors generate fixed length embeddings for a given word sequence. Dor et al. \cite{dor2018learning} propose a triplet fine-tuning technique which trains the embeddings to be better suited in predicting similarity of sentence pairs based on their likeliness of sharing same section (subtopic) in an Wikipedia article about a topic. Each training example consists of one anchor sentence, one similar sentence which is from same section than the anchor and one dissimilar sentence which is from different section than anchor. Using each of these approaches, we obtain fixed length embeddings for passages using tokenized passages as input token sequence. A straight-forward approach for the subtopic clustering would use cosine similarity between these fixed-length vectors as to quantify the pairwise similarity between passages. The similarity scores are used in  a clustering algorithm to obtain subtopic clusters. Note that, transformer models have a maximum input length. So for longer passages tokens beyond the maximum length are truncated.
 
 Although the triples data and target task proposed by Dor et al. may help detect a sentence pair from the same subtopic (i.e., same section of Wikipedia), we hypothesize that without certain modifications specific to subtopic clustering, we obtain sub-optimal results. There are several reasons behind our hypothesis: 
 \begin{itemize}[leftmargin=.15in]
@@ -25,13 +25,15 @@ Although the triples data and target task proposed by Dor et al. may help detect
 
 We propose the following simple modifications to the previous approaches when applied to subtopic clustering:
 \begin{itemize}[leftmargin=.15in]
-    \item Due to the reason discussed above, while generating negative training-examples for passage triples, we only consider passages which are from a different top-level branches in the hierarchy than the anchor passage. This will provide clear, unambiguous, and distinguishable supervision signal to the model under fine-tuning and help it to quickly learn the desired similarity function. Figure \ref{fig:conv} depicts the training data generation.
+    \item Due to the reason discussed above, while generating negative training-examples for passage triples, we only consider passages which are from a different top-level subtopics in the hierarchy than the anchor passage. This will provide clear, unambiguous, and distinguishable supervision signal to the model under fine-tuning and help it to quickly learn the desired similarity function. As we can see from Figure \ref{fig:conv} which depicts the training data generation, the passage pair $p1,p3$ is not included in the training data due to this reason.
     \item We train a query-dependent shallow network to provide pairwise passage similarity scores which are used by subsequent clustering algorithm to generate subtopic clusters of passages. Next we discuss this approach in more detail.
 \end{itemize}{}
 \begin{figure}[h]
   \centering
-  \includegraphics[width=\linewidth]{graphics/car_y1_conv.png}
-  \caption{Training data generation from Article \textit{Amur Leopard} and balancing the dataset (depicted in grey strikethrough)}
+  \includegraphics[width=\linewidth]{graphics/car_y1_conv.eps}
+  \caption{Training data generation from Article \textit{Amur Leopard} and balancing the dataset (depicted in grey strikethrough) \\
+  Section 2 is under Section 1 \\
+  p1 .. 6: Passages in article “Amur Leoprad”}
   \label{fig:conv}
 \end{figure}
 
@@ -41,7 +43,7 @@ The similarity between a pair of texts is often subject to the context. In conte
 As depicted in Figure \ref{fig:triam}, the general CATS architecture consists of three identical fully connected triamese neural layers ($DL1$), meaning they share the same set of weights. Each of them accepts fixed-length embedding vectors representing the query context and pair of passages respectively ($q,p_1,p_2$). Due to their triamese nature, they project all three embedding vectors to the same embedding subspace. The projected vectors ($q',p_1',p_2'$) and their difference vectors ($(p_1'-p_2'),(p_1'-q'),(p_2'-q')$) are concatenated. The concatenated output vector is transformed through another fully connected neural layer ($DL2$) which emits a similarity score.
 \begin{figure}[h]
   \centering
-  \includegraphics[width=0.8\linewidth]{graphics/triamese.png}
+  \includegraphics[width=0.8\linewidth]{graphics/triamese.eps}
   \caption{Triamese network used to estimate query dependent pairwise passage similarity score used for subtopic clustering \\
   SBERT: Fine-tuned BERT based embeddings (Reimers et al.) \\
   DL1,2: Dense layers}
