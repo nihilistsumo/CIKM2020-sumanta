@@ -9,7 +9,9 @@ The training and evaluation phase of the clustering pipeline is depicted in Figu
 \begin{figure}[h]
   \centering
   \includegraphics[width=\linewidth]{graphics/pipeline2.png}
-  \caption{Training and evaluation phase of clustering pipeline}
+  \caption{Training and evaluation phase of clustering pipeline \\
+  p1, p2: passages, PS: pairwise passage similarity scores \\
+  HAC clusters: Cluster of passages Obtained by Hierarchical Agglomerative clustering}
   \label{fig:pipe}
 \end{figure}
 
@@ -213,7 +215,8 @@ All passage embeddings used for our evaluation are of length 768. Reducing the d
 
 \begin{figure}[h]
   \centering
-  \includegraphics[width=\linewidth]{graphics/emb_vec_dim_red_exp.png}
-  \caption{Effect of dimensionality reduction of passage embedding vectors compared to the original vector}
+  \includegraphics[width=\linewidth]{graphics/emb_vec_dim_red_plot.png}
+  \caption{Effect of dimensionality reduction of passage embedding vectors compared to the original vector \\
+  X axis: Dimension of transformed embedding vector}
   \label{fig:dimred}
 \end{figure}

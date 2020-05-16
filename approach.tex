@@ -41,8 +41,10 @@ The similarity between a pair of texts is often subject to the context. In conte
 As depicted in Figure \ref{fig:triam}, the general CATS architecture consists of three identical fully connected triamese neural layers ($DL1$), meaning they share the same set of weights. Each of them accepts fixed-length embedding vectors representing the query context and pair of passages respectively ($q,p_1,p_2$). Due to their triamese nature, they project all three embedding vectors to the same embedding subspace. The projected vectors ($q',p_1',p_2'$) and their difference vectors ($(p_1'-p_2'),(p_1'-q'),(p_2'-q')$) are concatenated. The concatenated output vector is transformed through another fully connected neural layer ($DL2$) which emits a similarity score.
 \begin{figure}[h]
   \centering
-  \includegraphics[width=\linewidth]{graphics/triamese.png}
-  \caption{Triamese network used to estimate query dependent pairwise passage similarity score used for subtopic clustering}
+  \includegraphics[width=0.8\linewidth]{graphics/triamese.png}
+  \caption{Triamese network used to estimate query dependent pairwise passage similarity score used for subtopic clustering \\
+  SBERT: Fine-tuned BERT based embeddings (Reimers et al.) \\
+  DL1,2: Dense layers}
   \label{fig:triam}
 \end{figure}
 
